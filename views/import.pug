@@ -1,0 +1,9 @@
+extends layout
+
+block content
+  h1= Import
+
+  form(method='POST', action='/import/send', enctype='multipart/form-data')
+    label(for='files') File
+    input(id='files', name='files', type='file', multiple, accept='application/json')
+    input(type='submit', value='Import')

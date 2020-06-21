@@ -1,0 +1,6 @@
+@import "loader";
+
+// Prevent the scrollbar from shifting the page - https://css-tricks.com/elegant-fix-jumping-scrollbar-issue/
+html {
+    margin-left: calc(100vw - 100%);
+}

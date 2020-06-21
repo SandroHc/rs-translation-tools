@@ -1,0 +1,35 @@
+doctype html
+html
+  head
+    title= title
+    link(rel="stylesheet", href="/styles/style.css")
+
+    script(src="https://cdn.jsdelivr.net/npm/uikit@3.5.4/dist/js/uikit.min.js")
+    script(src="https://cdn.jsdelivr.net/npm/uikit@3.5.4/dist/js/uikit-icons.min.js")
+  body
+
+
+  header
+    div(uk-sticky="sel-target: .uk-navbar-container; cls-active: uk-navbar-sticky")
+      nav.uk-navbar-container
+        .uk-container
+          .uk-navbar
+
+            .uk-navbar-left
+              a.uk-navbar-item.uk-logo(href="/") Translation Tools
+              ul.uk-navbar-nav
+                li
+                  a(href="/import") Importer
+
+            .uk-navbar-right
+              form.uk-search.uk-search-navbar(method='GET', action='search')
+                ul.uk-navbar-nav
+                  li
+                    span(uk-search-icon)
+                    input.uk-search-input.uk-search-navbar(id="text", name="text", type="search", placeholder="Search...")
+                  li
+                    span(uk-icon="cog")
+
+  main
+    .uk-container
+      block content
