@@ -5,10 +5,12 @@ const fs = require('fs');
 const formidable = require('formidable');
 const SonicChannelIngest = require('sonic-channel').Ingest;
 
+const models = require('../db/models')();
+const Translation = models.Translation;
+
 const COLLECTION = 'translations';
 
-const MAX_SIMULTANEOUS_REQUESTS_SONIC = 100;
-const MAX_SIMULTANEOUS_REQUESTS_MONGO = 1000;
+const MAX_SIMULTANEOUS_REQUESTS_SONIC = 1;
 
 
 router.get('/', function(req, res, next) {
@@ -16,43 +18,56 @@ router.get('/', function(req, res, next) {
 });
 
 router.post('/send', function(req, res, next) {
+  res.setTimeout(1000 * 60 * 10); // 10 minute timeout
+
   console.info('SEND');
 
-  let sonicChannelIngest = new SonicChannelIngest({
-    host: process.env.SONIC_HOST,
-    port: parseInt(process.env.SONIC_PORT, 10),
-    auth: process.env.SONIC_PASS,
-  }).connect({
-    connected: () => {
-      console.info('Sonic Channel succeeded to connect to host (ingest)');
+  // remove all documents from the MongoDB collection
+  //Translation.remove({}).then(() => { // TODO
+  Translation.deleteMany({}).then(() => {
+    let sonicChannelIngest = new SonicChannelIngest({
+      host: process.env.SONIC_HOST,
+      port: parseInt(process.env.SONIC_PORT, 10),
+      auth: process.env.SONIC_PASS,
+    }).connect({
+      connected: () => {
+        console.info('Sonic Channel succeeded to connect to host (ingest)');
 
-      new formidable.IncomingForm().parse(req)
-        .on('file', (_, file) => {
-          processFile(file, sonicChannelIngest)
-            .catch(err => {
-              console.error(`Error processing file '${file.name}': ${err}`);
-              next(err);
-            })
-        })
-        .on('error', (err) => {
-          console.error('Error receiving files:', err);
-          throw err;
-        })
-        .on('end', () => {
-          console.log('Finished');
-          res.send(`done`);
-        })
-    },
-    retrying : () => console.warn('Trying to reconnect to Sonic Channel (ingest)...'),
-    error: (error) => {
-      console.error('Error connecting to Sonic Channel (ingest):', error);
-      throw error;
-    },
+        let promises = [];
+
+        new formidable.IncomingForm().parse(req)
+          .on('file', (_, file) => {
+            promises.push(processFile(file, sonicChannelIngest)
+              .catch(err => {
+                console.error(`Error processing file '${file.name}': ${err}`);
+                next(err);
+              })
+            );
+          })
+          .on('error', (err) => {
+            console.error('Error receiving files:', err);
+            throw err;
+          })
+          .on('end', () => {
+            Promise.all(promises)
+              .then(() => {
+                console.log('Finished all files');
+                res.send(`done`);
+              })
+          })
+      },
+      retrying: () => console.warn('Trying to reconnect to Sonic Channel (ingest)...'),
+      error: (error) => {
+        console.error('Error connecting to Sonic Channel (ingest):', error);
+        throw error;
+      },
+    })
   })
 })
 
 function processFile(file, sonicChannelIngest) {
   let filename = file.name.replace(/\.[^/.]+$/, ''); // remove the extension (e.g. 'items.json' -> 'items')
+  let category = filename;
 
   let rawdata = fs.readFileSync(file.path);
   let data = JSON.parse(rawdata);
@@ -60,34 +75,78 @@ function processFile(file, sonicChannelIngest) {
     return Promise.reject(`File '${file.name}' had invalid JSON data`);
 
   let promisesSonic = [];
-  let promisesMongo = [];
+  let instancesMongo = [];
 
   for (let [id, value] of Object.entries(data)) {
-    let key = `${filename}:${id}`;
+    id = normalizeId(id);
 
-    promisesSonic.push(() => ingestSonic(sonicChannelIngest, key, value));
-    promisesMongo.push(() => ingestMongo(null, key, value));
+    promisesSonic.push(() => ingestSonic(sonicChannelIngest, category, id, value));
+    instancesMongo.push(createMongoItem(category, id, value));
   }
 
   return Promise.all([
-    throttleActions(promisesSonic, MAX_SIMULTANEOUS_REQUESTS_SONIC),
-    throttleActions(promisesMongo, MAX_SIMULTANEOUS_REQUESTS_MONGO)
+//    throttleActions(promisesSonic, MAX_SIMULTANEOUS_REQUESTS_SONIC).then(() => console.log(`Finished '${file.name}' Sonic`)),
+    ingestMongo(file.name, instancesMongo).then(() => console.log(`Finished '${filename}' Mongo`))
   ])
     .then(() => console.log(`Finished '${file.name}'`));
 }
 
-function ingestMongo(mongo, key, value) {
-  return Promise.resolve();
+function normalizeId(id) {
+  if (id.startsWith('#'))
+    id = id.substring(1);
+
+  let num = parseInt(id, 10);
+
+  if (isNaN(num)) {
+    throw new Error(`ID '${id}' is not a valid numeric value`);
+  }
+
+  return num;
 }
 
-function ingestSonic(sonicChannelIngest, key, value) {
+function getKey(category, id) {
+  return `${category}:${id}`;
+}
+
+function createMongoItem(category, id, value) {
+  return {
+    key: getKey(category, id),
+    category,
+    id,
+    content: {
+      en: value.en,
+      de: value.de,
+      fr: value.fr,
+      pt: value.pt,
+    }
+  }
+}
+
+function ingestMongo(filename, translations) {
+  console.log(`Inserting ${translations.length} translations from ${filename} into Mongo`);
+
+  return Translation.insertMany(translations);
+  /*return Translation.bulkWrite(
+    translations.map(translation => ({
+      updateOne: {
+        filter: { key: translation.key },
+        update: { $set: translation },
+        upsert: true
+      }
+    }))
+  )*/
+}
+
+function ingestSonic(sonicChannelIngest, category, id, value) {
+  let key = getKey(category, id);
+
   return Promise.all([
     ingestSonicItem(sonicChannelIngest, 'en', key, value.en),
     ingestSonicItem(sonicChannelIngest, 'de', key, value.de),
     ingestSonicItem(sonicChannelIngest, 'fr', key, value.fr),
     ingestSonicItem(sonicChannelIngest, 'pt', key, value.pt)
   ])
-    .then(() => console.log(`Ingested '${key}' into Sonic`));
+//    .then(() => console.log(`Ingested '${key}' into Sonic`));
 }
 
 function ingestSonicItem(sonicChannelIngest, bucket, key, value) {

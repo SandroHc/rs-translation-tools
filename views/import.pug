@@ -1,9 +1,12 @@
 extends layout
 
 block content
-  h1= Import
+  h1 Import
 
-  form(method='POST', action='/import/send', enctype='multipart/form-data')
-    label(for='files') File
-    input(id='files', name='files', type='file', multiple, accept='application/json')
-    input(type='submit', value='Import')
+  form.uk-form-horizontal(method='POST', action='/import/send', enctype='multipart/form-data')
+
+    .uk-margin
+      div(uk-form-custom="target: true")
+        input(id='files', name='files', type='file', multiple, accept='application/json')
+        input.uk-input.uk-form-width-medium(type="text", placeholder="Select file", disabled)
+      input.uk-button.uk-button-default(type='submit', value='Import')

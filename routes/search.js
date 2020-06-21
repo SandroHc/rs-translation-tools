@@ -3,8 +3,9 @@ const router = express.Router();
 
 const SonicChannelSearch = require("sonic-channel").Search;
 
-const COLLECTION = 'translations';
-const BUCKET_ID = 'en';
+const models = require('../db/models')();
+const Translation = models.Translation;
+
 
 router.get('/:text?', function(req, res, next) {
   let text = req.params.text || req.query.text;
@@ -12,10 +13,19 @@ router.get('/:text?', function(req, res, next) {
   console.log('SEARCH', text)
 
   if (!text) {
-    doRender([]);
+    res.render('search', { title: text, results: [] });
     return;
   }
 
+  
+  // TODO: remove dependency 'mongoose-fuzzy-searching'
+  Translation.fuzzySearch(text, { category: "clan_titles" })
+    .then(results => {
+      console.log('RESULTS', results);
+      res.render('search', { title: text, results });
+    })
+  
+  /*
   let sonicChannelSearch = new SonicChannelSearch({
     host: process.env.SONIC_HOST,
     port: parseInt(process.env.SONIC_PORT, 10),
@@ -23,7 +33,20 @@ router.get('/:text?', function(req, res, next) {
   }).connect({
     connected: () => {
       console.info('Sonic Channel succeeded to connect to host (search)');
-      doSearch(sonicChannelSearch, text);
+      sonicChannelSearch.query(COLLECTION, BUCKET_ID, text)
+        .then(results => {
+          console.info('SONIC RESULTS', results);
+
+          Translation.find({ key: 'items:47553' }).exec()
+            .then(results => {
+              console.info('MONGO RESULTS', results);
+              res.render('search', { title: text, results }); 
+            })
+        })
+        .catch(error => {
+          console.error(error);
+          throw error;
+        })
     },
     retrying: () => console.warn('Trying to reconnect to Sonic Channel (search)...'),
     error: error => {
@@ -31,22 +54,12 @@ router.get('/:text?', function(req, res, next) {
       throw error;
     },
   })
+  */
 });
 
 function doSearch(sonicChannelSearch, text) {
-  sonicChannelSearch.query(COLLECTION, BUCKET_ID, text)
-    .then(results => {
-      console.info('Results', results);
-      doRender(results);
-    })
-    .catch(error => {
-      console.error(error);
-      throw error;
-    })
+  
 }
 
-function doRender(results) {
-  res.render('search', { title: text, results });
-}
 
 module.exports = router;
