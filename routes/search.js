@@ -3,6 +3,8 @@ const router = express.Router();
 
 const SonicChannelSearch = require("sonic-channel").Search;
 
+const COLLECTION = 'translations';
+const BUCKET_ID = 'en';
 
 router.get('/:text?', function(req, res, next) {
   let text = req.params.text || req.query.text;
@@ -10,7 +12,7 @@ router.get('/:text?', function(req, res, next) {
   console.log('SEARCH', text)
 
   if (!text) {
-    res.render('search', { search: text, results: [] });
+    doRender([]);
     return;
   }
 
@@ -19,27 +21,32 @@ router.get('/:text?', function(req, res, next) {
     port: parseInt(process.env.SONIC_PORT, 10),
     auth: process.env.SONIC_PASS,
   }).connect({
-    connected : function() {
+    connected: () => {
       console.info('Sonic Channel succeeded to connect to host (search)');
-
-      sonicChannelSearch.query('translations', 'en', text)
-        .then(function(results) {
-          console.info('Results', results);
-
-          res.render('search', { search: text, results });
-        })
-        .catch(function(error) {
-          console.warn('Error', error);
-        })
+      doSearch(sonicChannelSearch, text);
     },
-    retrying : function() {
-      console.warn('Trying to reconnect to Sonic Channel (search)...');
-    },
-    error: (error) => {
+    retrying: () => console.warn('Trying to reconnect to Sonic Channel (search)...'),
+    error: error => {
       console.error('Error connecting to Sonic Channel (search):', error);
       throw error;
     },
   })
 });
+
+function doSearch(sonicChannelSearch, text) {
+  sonicChannelSearch.query(COLLECTION, BUCKET_ID, text)
+    .then(results => {
+      console.info('Results', results);
+      doRender(results);
+    })
+    .catch(error => {
+      console.error(error);
+      throw error;
+    })
+}
+
+function doRender(results) {
+  res.render('search', { title: text, results });
+}
 
 module.exports = router;

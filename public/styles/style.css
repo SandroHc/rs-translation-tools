@@ -9979,6 +9979,6 @@ iframe.uk-cover {
     page-break-after: avoid; } }
 
 html {
-  margin-left: calc(100vw - 100%); }
+  overflow-y: scroll; }
 
 /*# sourceMappingURL=style.css.map */
