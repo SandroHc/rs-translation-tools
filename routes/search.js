@@ -17,15 +17,16 @@ router.get('/:text?', function(req, res, next) {
     return;
   }
 
-  
+  /*
   // TODO: remove dependency 'mongoose-fuzzy-searching'
-  Translation.fuzzySearch(text, { category: "clan_titles" })
+  Translation.fuzzySearch(text) // (text, { category: "clan_titles" })
     .then(results => {
-      console.log('RESULTS', results);
+      console.log('RESULTS', results.length);
       res.render('search', { title: text, results });
     })
+  */
   
-  /*
+  
   let sonicChannelSearch = new SonicChannelSearch({
     host: process.env.SONIC_HOST,
     port: parseInt(process.env.SONIC_PORT, 10),
@@ -33,13 +34,22 @@ router.get('/:text?', function(req, res, next) {
   }).connect({
     connected: () => {
       console.info('Sonic Channel succeeded to connect to host (search)');
-      sonicChannelSearch.query(COLLECTION, BUCKET_ID, text)
+      sonicChannelSearch.query('translations', 'default', text)
         .then(results => {
           console.info('SONIC RESULTS', results);
 
-          Translation.find({ key: 'items:47553' }).exec()
+          let resultsSet = new Set();
+          for (let result in results) {
+              let resultWithoutLang = result.substring(0, result.lastIndexOf(':'));
+              resultsSet.add(resultWithoutLang);
+          }
+          let resultsArr = Array.from(resultsSet);
+
+          console.info('SONIR RESULTS LANG', resultsArr);
+
+          Translation.find({ key: { $in: resultsArr }}).exec()
             .then(results => {
-              console.info('MONGO RESULTS', results);
+              console.info('MONGO RESULTS', results.length);
               res.render('search', { title: text, results }); 
             })
         })
@@ -54,7 +64,7 @@ router.get('/:text?', function(req, res, next) {
       throw error;
     },
   })
-  */
+  
 });
 
 function doSearch(sonicChannelSearch, text) {

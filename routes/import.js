@@ -8,8 +8,6 @@ const SonicChannelIngest = require('sonic-channel').Ingest;
 const models = require('../db/models')();
 const Translation = models.Translation;
 
-const COLLECTION = 'translations';
-
 const MAX_SIMULTANEOUS_REQUESTS_SONIC = 1;
 
 
@@ -85,7 +83,7 @@ function processFile(file, sonicChannelIngest) {
   }
 
   return Promise.all([
-//    throttleActions(promisesSonic, MAX_SIMULTANEOUS_REQUESTS_SONIC).then(() => console.log(`Finished '${file.name}' Sonic`)),
+    throttleActions(promisesSonic, MAX_SIMULTANEOUS_REQUESTS_SONIC).then(() => console.log(`Finished '${file.name}' Sonic`)),
     ingestMongo(file.name, instancesMongo).then(() => console.log(`Finished '${filename}' Mongo`))
   ])
     .then(() => console.log(`Finished '${file.name}'`));
@@ -138,25 +136,25 @@ function ingestMongo(filename, translations) {
 }
 
 function ingestSonic(sonicChannelIngest, category, id, value) {
-  let key = getKey(category, id);
-
   return Promise.all([
-    ingestSonicItem(sonicChannelIngest, 'en', key, value.en),
-    ingestSonicItem(sonicChannelIngest, 'de', key, value.de),
-    ingestSonicItem(sonicChannelIngest, 'fr', key, value.fr),
-    ingestSonicItem(sonicChannelIngest, 'pt', key, value.pt)
+    ingestSonicItem(sonicChannelIngest, 'en', category, id, value.en),
+    ingestSonicItem(sonicChannelIngest, 'de', category, id, value.de),
+    ingestSonicItem(sonicChannelIngest, 'fr', category, id, value.fr),
+    ingestSonicItem(sonicChannelIngest, 'pt', category, id, value.pt)
   ])
 //    .then(() => console.log(`Ingested '${key}' into Sonic`));
 }
 
-function ingestSonicItem(sonicChannelIngest, bucket, key, value) {
+function ingestSonicItem(sonicChannelIngest, lang, category, id, value) {
   if (!value)
     return Promise.resolve();
 
+  let key = getKey(category, id) + ':' + lang;
+
   return sonicChannelIngest
-    .push(COLLECTION, bucket, key, value.toString())
+    .push('translations', 'default', key, value.toString())
     .catch(err => {
-      throw new Error(`Unexpected error ingesting '${bucket}@${key}' into Sonic: ${err}`);
+      throw new Error(`Unexpected error ingesting '${key}' into Sonic: ${err}`);
     })
 }
 

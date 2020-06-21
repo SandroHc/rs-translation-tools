@@ -3,4 +3,18 @@ extends layout
 block content
   h1 Search for '#{title}'
 
-  span #{results}
+  .uk-overflow-auto
+    table.uk-table.uk-table-small.uk-table-divider.uk-table-hover
+      thead
+        tr
+          th EN
+          th DE
+          th FR
+          th PT
+      tbody
+        each val in results
+          tr
+            td.uk-text-truncate= val.content.en
+            td.uk-text-truncate= val.content.de
+            td.uk-text-truncate= val.content.fr
+            td.uk-text-truncate= val.content.pt
