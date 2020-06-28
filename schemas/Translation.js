@@ -1,36 +1,27 @@
 const mongoose = require('mongoose');
-const mongooseFuzzySearch = require('mongoose-fuzzy-searching');
 
 const TranslationSchema = new mongoose.Schema({
     key: { type: String, unique: true },
     category: String,
     id: { type: Number, min: 0 },
     content: {
-        en: String,
-        de: String,
-        fr: String,
-        pt: String
+        en: { value: String, language: String },
+        de: { value: String, language: String },
+        fr: { value: String, language: String },
+        pt: { value: String, language: String },
     },
     updated: { type: Date, default: Date.now }
 });
 
 TranslationSchema.index({ category: 1, id: 1 }, { unique: true });
-
-TranslationSchema.plugin(mongooseFuzzySearch, {
-    fields: [
-        {
-            name: 'content',
-            minSize: 3,
-            keys: ['en', 'de', 'fr', 'pt']
-        }
-    ]
-});
+TranslationSchema.index({ category: 1, content: 1 }, { unique: true });
 
 TranslationSchema.index({
-    'content_fuzzy.en_fuzzy': 'text',
-    'content_fuzzy.de_fuzzy': 'text',
-    'content_fuzzy.fr_fuzzy': 'text',
-    'content_fuzzy.pt_fuzzy': 'text'
+    'content.en.value': 'text',
+    'content.de.value': 'text',
+    'content.fr.value': 'text',
+    'content.pt.value': 'text',
 });
+
 
 module.exports = TranslationSchema;

@@ -1121,11 +1121,6 @@ mongodb@3.5.9:
   optionalDependencies:
     saslprep "^1.0.0"
 
-mongoose-fuzzy-searching@^1.3.1:
-  version "1.3.1"
-  resolved "https://registry.yarnpkg.com/mongoose-fuzzy-searching/-/mongoose-fuzzy-searching-1.3.1.tgz#d28bca249539269a9f6327bc74618960376f563b"
-  integrity sha512-Vi+EwmYPoxZzgwBOuTg5FBjXqbX1gjbXxvX/4Ypo7yC2aGKwKfgEeenAVwU6DPirL/TDj6jLGEoblzMJ3+HWCg==
-
 mongoose-legacy-pluralize@1.0.2:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/mongoose-legacy-pluralize/-/mongoose-legacy-pluralize-1.0.2.tgz#3ba9f91fa507b5186d399fb40854bff18fb563e4"
@@ -1805,11 +1800,6 @@ sliced@1.0.1:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/sliced/-/sliced-1.0.1.tgz#0b3a662b5d04c3177b1926bea82b03f837a2ef41"
   integrity sha1-CzpmK10Ewxd7GSa+qCsD+Dei70E=
-
-sonic-channel@^1.2.6:
-  version "1.2.6"
-  resolved "https://registry.yarnpkg.com/sonic-channel/-/sonic-channel-1.2.6.tgz#b8ae761eeaa5a3854f073f0865309103d2eefb52"
-  integrity sha512-vJaC27/bYvd2v2ZKx6njHoQGxoLOHLjXHc7XF+3BAyNSULJ/A1lYyJkCdVgskvpIfpX5khpsg0aWAT4sORppSA==
 
 source-map@0.4.x, source-map@^0.4.2:
   version "0.4.4"

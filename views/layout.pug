@@ -21,16 +21,13 @@ html
 
             .uk-navbar-left
               a.uk-navbar-item.uk-logo(href="/") Translation Tools
-              ul.uk-navbar-nav
-                li
-                  a(href="/import") Importer
 
             .uk-navbar-right
               form.uk-search.uk-search-navbar(method='GET', action='/search')
                 ul.uk-navbar-nav
                   li
                     span(uk-search-icon)
-                    input.uk-search-input.uk-search-navbar(id="text", name="text", type="search", placeholder="Search...")
+                    input.uk-search-input.uk-search-navbar(id="text", name="text", type="search", placeholder="Search...", autofocus, value=(search || ''))
                   li
                     span(uk-icon="cog")
 

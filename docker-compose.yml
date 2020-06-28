@@ -29,14 +29,6 @@ services:
             - MONGO_INITDB_DATABASE=rstranslations
             - MONGO_INITDB_ROOT_USERNAME=rstranslations
             - MONGO_INITDB_ROOT_PASSWORD=rstranslations
-    sonic:
-        image: valeriansaliou/sonic:v1.2.3
-        restart: unless-stopped
-        ports:
-            - '6003:1491'
-        volumes:
-            - ./sonic-config.cfg:/etc/sonic.cfg
-            - sonic:/var/lib/sonic/store/
 networks:
     rstranslations:
 volumes:

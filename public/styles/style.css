@@ -9981,4 +9981,14 @@ iframe.uk-cover {
 html {
   overflow-y: scroll; }
 
+.uk-search-navbar {
+  background-color: #e5e5e5;
+  border-radius: 1em;
+  padding: 0.5em; }
+
+.category {
+  background-color: white;
+  padding: 0.5em 0;
+  margin: 0; }
+
 /*# sourceMappingURL=style.css.map */

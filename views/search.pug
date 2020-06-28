@@ -1,20 +1,25 @@
 extends layout
 
 block content
-  h1 Search for '#{title}'
+  p
+    center
+      strong Found #{total} results for '#{search}'
 
-  .uk-overflow-auto
-    table.uk-table.uk-table-small.uk-table-divider.uk-table-hover
-      thead
-        tr
-          th EN
-          th DE
-          th FR
-          th PT
-      tbody
-        each val in results
+  each list, category in results
+    h2.category(uk-sticky='offset: 80')= category
+
+    .uk-overflow-auto
+      table.uk-table.uk-table-small.uk-table-divider.uk-table-hover
+        thead
           tr
-            td.uk-text-truncate= val.content.en
-            td.uk-text-truncate= val.content.de
-            td.uk-text-truncate= val.content.fr
-            td.uk-text-truncate= val.content.pt
+            th(title='English') EN
+            th(title='German') DE
+            th(title='French') FR
+            th(title='Portuguese') PT
+        tbody
+          each val in list
+            tr
+              td.uk-text-truncate(title=val.en)= val.en
+              td.uk-text-truncate(title=val.de)= val.de
+              td.uk-text-truncate(title=val.fr)= val.fr
+              td.uk-text-truncate(title=val.pt)= val.pt

@@ -5,3 +5,15 @@ html {
     // margin-left: calc(100vw - 100%);
     overflow-y: scroll;
 }
+
+.uk-search-navbar {
+    background-color: $global-border;
+    border-radius: 1em;
+    padding: 0.5em;
+}
+
+.category {
+    background-color: white;
+    padding: 0.5em 0;
+    margin: 0;
+}
