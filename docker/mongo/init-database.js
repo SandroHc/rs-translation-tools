@@ -5,6 +5,3 @@ db.createUser({
 });
 
 db.createCollection('translations');
-//db.getCollection('translations').createIndex({
-//	title: 1,
-//});

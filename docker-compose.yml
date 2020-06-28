@@ -4,8 +4,7 @@ services:
     web:
         depends_on:
             - mongo
-            - sonic
-        image: rstranslations
+        image: rs-translations
         build:
             context: .
             dockerfile: Dockerfile
