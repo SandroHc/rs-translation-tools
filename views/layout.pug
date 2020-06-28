@@ -1,15 +1,48 @@
 doctype html
 html
   head
+    meta(charset="utf-8")
+    meta(http-equiv="X-UA-Compatible" content="IE=edge")
+    meta(name="viewport" content="width=device-width, initial-scale=1")
+
     if title
       title #{title} • RS Translation Tools
     else
       title RS Translation Tools
 
-    link(rel="stylesheet", href="/styles/style.css")
+    link(rel="stylesheet" href="/styles/style.css")
 
     script(src="https://cdn.jsdelivr.net/npm/uikit@3.5.4/dist/js/uikit.min.js")
     script(src="https://cdn.jsdelivr.net/npm/uikit@3.5.4/dist/js/uikit-icons.min.js")
+
+    //- Favicons | https://realfavicongenerator.net
+    link(rel="apple-touch-icon" sizes="76x76" href="/apple-touch-icon.png")
+    link(rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png")
+    link(rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png")
+    link(rel="manifest" href="/site.webmanifest")
+    link(rel="mask-icon" href="/safari-pinned-tab.svg" color="#0d508a")
+    meta(name="msapplication-TileColor" content="#0d508a")
+    meta(name="theme-color" content="#ffffff")
+
+    //- Primary Meta Tags | https://metatags.io
+    meta(name="title"              content="RuneScape Translations")
+    meta(name="description"        content="Translations for in-game data for the RuneScape game.")
+    //- Open Graph / Facebook
+    meta(property="og:type"        content="website")
+    meta(property="og:url"         content="https://rs.sandrohc.net/")
+    meta(property="og:title"       content="RuneScape Translations")
+    meta(property="og:description" content="Translations for in-game data for the RuneScape game.")
+    meta(property="og:image"       content="")
+    //- Twitter
+    meta(property="twitter:card"   content="summary_large_image")
+    meta(property="twitter:url"    content="https://rs.sandrohc.net/")
+    meta(property="twitter:title"  content="RuneScape Translations")
+    meta(property="twitter:description" content="Translations for in-game data for the RuneScape game.")
+    meta(property="twitter:image"  content="")
+
+    //- Global Site Tag (gtag.js) - Google Analytics
+    script(async, src="https://www.googletagmanager.com/gtag/js?id=UA-63320058-1")
+    script window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments)}; gtag('js', new Date()); gtag('config', 'UA-63320058-1');
   body
 
 
