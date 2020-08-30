@@ -5,9 +5,11 @@ Web application for finding translations for in-game data for the RuneScape game
 
 ## Development
 
-You will need [Node.js](https://nodejs.org) installed (tested only with version 12.16.1).
+As a prerequisite, install [Node.js](https://nodejs.org) (tested only with version 12.16.1). You will also need [Yarn v1](https://classic.yarnpkg.com/en/docs/install).
 
-To run the Node server locally type `npm start`. The server will be available at [localhost:8080](http://localhost:8080).
+First, download all the dependencies by running `yarn install` on the project directory.
+
+Now you can start the Node server locally by typing `yarn start`. The server will be available at [localhost:8080](http://localhost:8080).
 
 
 ### Docker
