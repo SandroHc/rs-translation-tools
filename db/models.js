@@ -1,12 +1,13 @@
 const mongoose = require('mongoose');
 const fs = require('fs');
 const debug = require('debug')('app:middleware:registerModels');
+const config = require('../config');
 
 let models = [];
 let conns = [];
 let path = __dirname + '/../schemas';
 
-const TENANT = 'rstranslations';
+const TENANT = 'rs';
 
 /** 
  * https://stackoverflow.com/a/29663284/3220305
@@ -44,12 +45,10 @@ function factory() {
 }
 
 function getJdbcString() {
-    let user = process.env.MONGO_USER;
-    let pass = process.env.MONGO_PASS;
-    let host = process.env.MONGO_HOST;
-    let port = process.env.MONGO_PORT;
+    let { user, password, host, port } = config.mongo;
     let timeout = 1000 * 60 * 10; // 10 minute timeout
-    return `mongodb://${user}:${pass}@${host}:${port}/${TENANT}?keepAlive=true&poolSize=30&socketTimeoutMS=${timeout}&connectTimeoutMS=${timeout}`;
+
+    return `mongodb://${user}:${password}@${host}:${port}/${TENANT}?keepAlive=true&poolSize=30&socketTimeoutMS=${timeout}&connectTimeoutMS=${timeout}&authSource=admin`;
 }
 
 module.exports = factory;

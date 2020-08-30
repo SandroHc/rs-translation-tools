@@ -13,8 +13,9 @@ const TranslationSchema = new mongoose.Schema({
     updated: { type: Date, default: Date.now }
 });
 
+// Ensure data integrity by detecting duplicates
 TranslationSchema.index({ category: 1, id: 1 }, { unique: true });
-TranslationSchema.index({ category: 1, content: 1 }, { unique: true });
+TranslationSchema.index({ category: 1, 'content.en.value': 1, 'content.de.value': 1, 'content.fr.value': 1, 'content.pt.value': 1 }, { unique: true });
 
 TranslationSchema.index({
     'content.en.value': 'text',

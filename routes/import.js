@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const debug = require('debug')('app:route:import');
 
 const fs = require('fs');
 const formidable = require('formidable');
@@ -9,13 +10,16 @@ const Translation = models.Translation;
 
 
 router.get('/', function(req, res, next) {
-  res.render('import', { title: 'Importer' });
+  let status = req.query.status;
+  let error = req.query.error;
+
+  res.render('import', { title: 'Importer', success: status === 'success', error: error });
 });
 
-router.post('/send', async function(req, res, next) {
+router.post('/', async function(req, res, next) {
   res.setTimeout(1000 * 60 * 10); // 10 minute timeout
 
-  console.info('Cleaning DB')
+  debug('Cleaning DB');
   await Translation.deleteMany({});
   
   let promises = [];
@@ -24,8 +28,7 @@ router.post('/send', async function(req, res, next) {
     .on('file', (_, file) => {
       promises.push(processFile(file)
         .catch(err => {
-          console.error(`Error processing file '${file.name}': ${err}`);
-          next(err);
+          throw new Error(`Error processing file '${file.name}': ${err}`);
         })
       );
     })
@@ -35,9 +38,13 @@ router.post('/send', async function(req, res, next) {
     })
     .on('end', () => {
       Promise.all(promises)
+        .catch(err => {
+          console.error(err);
+          res.redirect('/import?status=error&error=' + err);
+        })
         .then(() => {
-          console.log('Finished all files');
-          res.send(`done`);
+          debug('Finished all files');
+          res.redirect('/import?status=success');
         })
     })
 })
@@ -61,7 +68,7 @@ async function processFile(file) {
   }
 
   return ingestMongo(file.name, translations)
-    .then(() => console.log(`Finished '${file.name}'`));
+    .then(() => debug(`Finished '${file.name}'`));
 }
 
 function getKey(category, id) {
@@ -101,10 +108,8 @@ function normalizeId(id) {
     id = id.substring(1);
 
   let num = parseInt(id, 10);
-
-  if (isNaN(num)) {
+  if (isNaN(num))
     throw new Error(`ID '${id}' is not a valid numeric value`);
-  }
 
   return num;
 }
@@ -120,12 +125,11 @@ function normalize(text) {
 }
 
 function ingestMongo(filename, translations) {
-  console.log(`Inserting ${translations.length} translations from ${filename}`);
+  debug(`Inserting ${translations.length} translations from ${filename}`);
 
-  return Translation.insertMany(translations, { ordered: false })
+  return Translation.collection.insertMany(translations, { ordered: false })
     .catch(e => {
       console.warn(`Error insering into ${filename}. Probably a duplicate.`)
-//      console.trace(e);
     });
 }
 

@@ -3,7 +3,13 @@ extends layout
 block content
   h1 Import
 
-  form.uk-form-horizontal(method='POST', action='/import/send', enctype='multipart/form-data')
+  if success
+    span SUCCESS
+
+  if error
+    span ERROR #{error}
+
+  form.uk-form-horizontal(method='POST', action='/import', enctype='multipart/form-data')
 
     .uk-margin
       div(uk-form-custom="target: true")

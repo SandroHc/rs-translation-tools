@@ -1,35 +1,32 @@
-version: '3.3'
+version: '3.7'
 
 services:
     web:
         depends_on:
-            - mongo
+            - db
         image: rs-translations
         build:
             context: .
             dockerfile: Dockerfile
         restart: "no"
         ports:
-            - "6001:3000"
+            - 6000:80
         networks:
             - rstranslations
-    mongo:
+    db:
         image: mongo:4
         restart: unless-stopped
-        command: mongod
         volumes:
-            - ./docker/mongo/:/docker-entrypoint-initdb.d/
             - mongo:/data/db
         ports:
-            - "6002:27017"
+            - 27017:27017
         networks:
             - rstranslations
         environment:
-            - MONGO_INITDB_DATABASE=rstranslations
+            - MONGO_INITDB_DATABASE=rs
             - MONGO_INITDB_ROOT_USERNAME=rstranslations
             - MONGO_INITDB_ROOT_PASSWORD=rstranslations
 networks:
     rstranslations:
 volumes:
     mongo:
-    sonic:

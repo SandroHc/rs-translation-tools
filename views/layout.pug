@@ -6,9 +6,9 @@ html
     meta(name="viewport" content="width=device-width, initial-scale=1")
 
     if title
-      title #{title} • RS Translation Tools
+      title #{title} • #{config.app.title}
     else
-      title RS Translation Tools
+      title #{config.app.title}
 
     link(rel="stylesheet" href="/styles/style.css")
 
@@ -29,20 +29,21 @@ html
     meta(name="description"        content="Translations for in-game data for the RuneScape game.")
     //- Open Graph / Facebook
     meta(property="og:type"        content="website")
-    meta(property="og:url"         content="https://rs.sandrohc.net/")
+    meta(property="og:url"         content=config.app.url)
     meta(property="og:title"       content="RuneScape Translations")
     meta(property="og:description" content="Translations for in-game data for the RuneScape game.")
     meta(property="og:image"       content="")
     //- Twitter
     meta(property="twitter:card"   content="summary_large_image")
-    meta(property="twitter:url"    content="https://rs.sandrohc.net/")
+    meta(property="twitter:url"    content=config.app.url)
     meta(property="twitter:title"  content="RuneScape Translations")
     meta(property="twitter:description" content="Translations for in-game data for the RuneScape game.")
     meta(property="twitter:image"  content="")
 
     //- Global Site Tag (gtag.js) - Google Analytics
-    script(async, src="https://www.googletagmanager.com/gtag/js?id=UA-63320058-1")
-    script window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments)}; gtag('js', new Date()); gtag('config', 'UA-63320058-1');
+    if config.analytics.enabled
+      script(async, src="https://googletagmanager.com/gtag/js?id=" + config.analytics.id)
+      script window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments)}; gtag('js', new Date()); gtag('config', '#{config.analytics.id}');
   body
 
 
