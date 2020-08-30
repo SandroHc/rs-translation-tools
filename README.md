@@ -18,7 +18,7 @@ Setting up dev environment:
 
 Building and pushing a new image:
 * `docker-compose build`
-* `docker image tag rs-translations:latest`
+* `docker image tag rs-translations rs-translations:latest`
 * `docker push rs-translations:latest`
 
 Building and testing a local image:

@@ -3,6 +3,10 @@ let config = {
         title: process.env.APP_TITLE,
         url: process.env.APP_URL,
     },
+    auth: {
+        user: process.env.AUTH_USER,
+        password: process.env.AUTH_PASS,
+    },
     mongo: {
         host: process.env.MONGO_HOST,
         port: process.env.MONGO_PORT,

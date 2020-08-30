@@ -1,9 +1,10 @@
-const createError = require('http-errors');
 const express = require('express');
 const path = require('path');
-const cookieParser = require('cookie-parser');
 const logger = require('morgan');
+const cookieParser = require('cookie-parser');
 const sassMiddleware = require('node-sass-middleware');
+const createError = require('http-errors');
+const basicAuth = require('express-basic-auth');
 
 const indexRouter = require('./routes/index');
 const searchRouter = require('./routes/search');
@@ -57,13 +58,16 @@ const middleware = {
 
 };
 
+let authUser = {};
+authUser[config.auth.user] = config.auth.password;
+
 
 app.use(middleware.globalLocals);
 app.use(middleware.errorHandler);
 
 app.use('/', indexRouter);
 app.use('/search', searchRouter);
-app.use('/import', importRouter);
+app.use('/import', basicAuth({ challenge: true, users: authUser }), importRouter);
 app.use(middleware.notFound);
 
 module.exports = app;
