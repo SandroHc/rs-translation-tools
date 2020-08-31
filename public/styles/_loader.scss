@@ -1,5 +1,6 @@
-// Custom variables and variable overwrites.
-$global-link-color: #DA7D02;
+$global-primary-background: #3732C7;
+$navbar-background: $global-primary-background;
+$search-icon-color: $global-primary-background;
 
 @import "uikit/src/scss/variables-theme.scss";
 @import "uikit/src/scss/mixins-theme.scss";

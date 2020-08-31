@@ -1,10 +1,14 @@
 extends layout
 
-block content
-  p
-    center
-      strong Found #{total} results for '#{search}'
+block breadcrumb
+  ul.uk-breadcrumb
+    li
+      a(href="/") Search
+    li
+      strong #{search}
+      div &nbsp(#{total} results)
 
+block content
   each list, category in results
     h2.category(uk-sticky='offset: 80')= category
 
@@ -19,7 +23,12 @@ block content
         tbody
           each val in list
             tr
-              td.uk-text-truncate(title=val.en)= val.en
-              td.uk-text-truncate(title=val.de)= val.de
-              td.uk-text-truncate(title=val.fr)= val.fr
-              td.uk-text-truncate(title=val.pt)= val.pt
+              td.uk-text-truncate(title=val.en, data-clipboard-text=val.en)= val.en
+              td.uk-text-truncate(title=val.de, data-clipboard-text=val.de)= val.de
+              td.uk-text-truncate(title=val.fr, data-clipboard-text=val.fr)= val.fr
+              td.uk-text-truncate(title=val.pt, data-clipboard-text=val.pt)= val.pt
+
+
+    script(src="https://cdn.jsdelivr.net/npm/clipboard@2.0.6/dist/clipboard.min.js")
+    script.
+      new ClipboardJS('[data-clipboard-text]');

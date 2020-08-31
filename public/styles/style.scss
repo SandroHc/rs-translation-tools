@@ -6,14 +6,40 @@ html {
     overflow-y: scroll;
 }
 
-.uk-search-navbar {
-    background-color: $global-border;
-    border-radius: 1em;
-    padding: 0.5em;
+
+main {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
 }
 
+.uk-logo,
+.uk-logo:hover {
+    color: #FFF;
+}
+
+
+.uk-search-navbar {
+    background-color: $global-background;
+    border-radius: 0.3em;
+    padding: 0.5em 0.5em 0.5em 2em;
+
+    .uk-search-icon {
+        width: 75px;
+    }
+
+    .uk-search-input {
+        font-size: 1.2rem;
+    }
+}
+
+
 .category {
-    background-color: white;
+    background-color: #FFF;
     padding: 0.5em 0;
     margin: 0;
+}
+
+
+[data-clipboard-text] {
+    cursor: pointer;
 }

@@ -11,9 +11,19 @@ const Translation = models.Translation;
 
 router.get('/', function(req, res, next) {
   let status = req.query.status;
-  let error = req.query.error;
+  let message = req.query.message;
 
-  res.render('import', { title: 'Importer', success: status === 'success', error: error });
+  let alert;
+  if(status === 'success')
+    alert = 'success';
+  else if(status === 'warning')
+    alert = 'warning';
+  else if(status === 'error')
+    alert = 'danger';
+  else if(status || message)
+    alert = 'primary';
+
+  res.render('import', { title: 'Importer', alert, message });
 });
 
 router.post('/', async function(req, res, next) {
@@ -40,11 +50,11 @@ router.post('/', async function(req, res, next) {
       Promise.all(promises)
         .catch(err => {
           console.error(err);
-          res.redirect('/import?status=error&error=' + err);
+          res.redirect('/import?status=error&message=' + err);
         })
         .then(() => {
           debug('Finished all files');
-          res.redirect('/import?status=success');
+          res.redirect('/import?status=success&message=Success importing files!');
         })
     })
 })

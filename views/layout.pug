@@ -12,9 +12,6 @@ html
 
     link(rel="stylesheet" href="/styles/style.css")
 
-    script(src="https://cdn.jsdelivr.net/npm/uikit@3.5.4/dist/js/uikit.min.js")
-    script(src="https://cdn.jsdelivr.net/npm/uikit@3.5.4/dist/js/uikit-icons.min.js")
-
     //- Favicons | https://realfavicongenerator.net
     link(rel="apple-touch-icon" sizes="76x76" href="/apple-touch-icon.png")
     link(rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png")
@@ -44,27 +41,29 @@ html
     if config.analytics.enabled
       script(async, src="https://googletagmanager.com/gtag/js?id=" + config.analytics.id)
       script window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments)}; gtag('js', new Date()); gtag('config', '#{config.analytics.id}');
+
   body
 
+    header
+      div(uk-sticky="sel-target: .uk-navbar-container; cls-active: uk-navbar-sticky")
+        nav.uk-navbar-container
+          .uk-container
+            .uk-navbar
 
-  header
-    div(uk-sticky="sel-target: .uk-navbar-container; cls-active: uk-navbar-sticky")
-      nav.uk-navbar-container
-        .uk-container
-          .uk-navbar
+              .uk-navbar-left
+                a.uk-navbar-item.uk-logo(href="/") Translation Tools
 
-            .uk-navbar-left
-              a.uk-navbar-item.uk-logo(href="/") Translation Tools
+              .uk-navbar-right
+                form.uk-search.uk-search-navbar(method='GET', action='/search')
+                  ul.uk-navbar-nav
+                    li
+                      span(uk-search-icon)
+                      input.uk-search-input.uk-search-navbar(id="text", name="text", type="search", placeholder="Search...", autofocus, value=(search || ''))
 
-            .uk-navbar-right
-              form.uk-search.uk-search-navbar(method='GET', action='/search')
-                ul.uk-navbar-nav
-                  li
-                    span(uk-search-icon)
-                    input.uk-search-input.uk-search-navbar(id="text", name="text", type="search", placeholder="Search...", autofocus, value=(search || ''))
-                  li
-                    span(uk-icon="cog")
+    main
+      .uk-container
+        block breadcrumb
+        block content
 
-  main
-    .uk-container
-      block content
+    script(src="https://cdn.jsdelivr.net/npm/uikit@3.5.7/dist/js/uikit.min.js")
+    script(src="https://cdn.jsdelivr.net/npm/uikit@3.5.7/dist/js/uikit-icons.min.js")

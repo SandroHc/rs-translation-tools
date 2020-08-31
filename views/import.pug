@@ -1,13 +1,16 @@
 extends layout
 
+block breadcrumb
+  ul.uk-breadcrumb
+    li
+      a(href="/import") Import
+
 block content
-  h1 Import
 
-  if success
-    span SUCCESS
-
-  if error
-    span ERROR #{error}
+  if alert
+    div(uk-alert, class='uk-alert-' + alert)
+      a.uk-alert-close(uk-close)
+      p #{message}
 
   form.uk-form-horizontal(method='POST', action='/import', enctype='multipart/form-data')
 
