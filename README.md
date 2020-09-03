@@ -5,11 +5,13 @@ Web application for finding translations for in-game data for the RuneScape game
 
 ## Development
 
-As a prerequisite, install [Node.js](https://nodejs.org) (tested only with version 12.16.1). You will also need [Yarn v1](https://classic.yarnpkg.com/en/docs/install).
+Install an Elasticsearch server (alternatively you can start a Docker container by running `docker-compose -p rs-translations up -d elastic`).
 
-First, download all the dependencies by running `yarn install` on the project directory.
+Install [Node.js](https://nodejs.org) (tested only with version 12.16.1). You will also need [Yarn v1](https://classic.yarnpkg.com/en/docs/install). Download all the dependencies by running `yarn install` on the project directory.
 
-Now you can start the Node server locally by typing `yarn start`. The server will be available at [localhost:8080](http://localhost:8080).
+Copy `.env.example` to `.env` and configure the variables.
+
+Start the Node server locally by typing `yarn start`. The server will be available at [localhost:8080](http://localhost:8080).
 
 
 ### Docker
