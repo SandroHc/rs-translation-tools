@@ -3,6 +3,8 @@ extends layout
 block breadcrumb
   ul.uk-breadcrumb
     li
+      a(href="/", uk-icon="icon: home", title="Home")
+    li
       a(href="/") Search
     li
       strong #{search}

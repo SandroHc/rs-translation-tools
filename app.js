@@ -6,10 +6,6 @@ const sassMiddleware = require('node-sass-middleware');
 const createError = require('http-errors');
 const basicAuth = require('express-basic-auth');
 
-const indexRouter = require('./routes/index');
-const searchRouter = require('./routes/search');
-const importRouter = require('./routes/import');
-
 const app = express();
 const config = require('./config');
 
@@ -35,6 +31,7 @@ const middleware = {
 
   globalLocals: function (req, res, next) {
     res.locals.config = config;
+    res.locals.route = req.path;
     next();
   },
 
@@ -58,16 +55,19 @@ const middleware = {
 
 };
 
-let authUser = {};
-authUser[config.auth.user] = config.auth.password;
+function getAuthUser() {
+  let user = {};
+  user[config.auth.user] = config.auth.password;
+  return user;
+}
 
 
 app.use(middleware.globalLocals);
-app.use(middleware.errorHandler);
-
-app.use('/', indexRouter);
-app.use('/search', searchRouter);
-app.use('/import', basicAuth({ challenge: true, users: authUser }), importRouter);
+app.use('/', require('./routes/index'));
+app.use('/about', require('./routes/about'));
+app.use('/search', require('./routes/search'));
+app.use('/dashboard', basicAuth({ challenge: true, users: getAuthUser() }), require('./routes/dashboard'));
 app.use(middleware.notFound);
+app.use(middleware.errorHandler);
 
 module.exports = app;

@@ -23,14 +23,21 @@ router.get('/', function(req, res, next) {
   else if(status || message)
     alert = 'primary';
 
-  res.render('import', { title: 'Importer', alert, message });
+
+  const categories = Translation.aggregate([
+    { $group: { _id: "$category", count: { $sum:1 } } }
+  ]);
+  debug('CATEGORIES: %O', categories);
+
+  
+  res.render('dashboard', { title: 'Dahsboard', alert, message });
 });
 
-router.post('/', async function(req, res, next) {
+router.post('/import', async function(req, res, next) {
   res.setTimeout(1000 * 60 * 10); // 10 minute timeout
 
-  debug('Cleaning DB');
-  await Translation.deleteMany({});
+//  debug('Cleaning DB');
+//  await Translation.deleteMany({});
   
   let promises = [];
 
@@ -38,7 +45,7 @@ router.post('/', async function(req, res, next) {
     .on('file', (_, file) => {
       promises.push(processFile(file)
         .catch(err => {
-          throw new Error(`Error processing file '${file.name}': ${err}`);
+          throw `Error processing '${file.name}': ${err}`;
         })
       );
     })
@@ -50,11 +57,14 @@ router.post('/', async function(req, res, next) {
       Promise.all(promises)
         .catch(err => {
           console.error(err);
-          res.redirect('/import?status=error&message=' + err);
+          res.redirect('/dashboard?status=error&message=' + err);
         })
         .then(() => {
+          if (res.headersSent)
+            return;
+
           debug('Finished all files');
-          res.redirect('/import?status=success&message=Success importing files!');
+          res.redirect('/dashboard?status=success&message=Success importing files!');
         })
     })
 })
@@ -64,18 +74,11 @@ async function processFile(file) {
   let category = filename;
 
   let rawdata = fs.readFileSync(file.path);
-  let data;
-  try {
-    data = JSON.parse(rawdata);
-  } catch(e) {
-    return Promise.reject(`File '${file.name}' had invalid JSON data: ${e}`);
-  }
+  let data = JSON.parse(rawdata);
 
   let translations = [];
-
-  for (let [id, value] of Object.entries(data)) {
+  for (let [id, value] of Object.entries(data))
     translations.push(createMongoItem(category, id, value));
-  }
 
   return ingestMongo(file.name, translations)
     .then(() => debug(`Finished '${file.name}'`));

@@ -65,5 +65,16 @@ html
         block breadcrumb
         block content
 
+    footer
+      .uk-container.uk-flex.uk-flex-center
+        ul.uk-subnav.uk-subnav-divider.uk-padding-small(uk-margin)
+          li(class=(route == '/about') ? 'uk-active' : '')
+            a(href="/about") About
+          li(class=(route == '/dashboard') ? 'uk-active' : '')
+            a(href="/dashboard") Dashboard
+          li
+            a(href="https://github.com/SandroHc/rs-translation-tools", target="_blank") GitHub
+
+
     script(src="https://cdn.jsdelivr.net/npm/uikit@3.5.7/dist/js/uikit.min.js")
     script(src="https://cdn.jsdelivr.net/npm/uikit@3.5.7/dist/js/uikit-icons.min.js")

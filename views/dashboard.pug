@@ -3,7 +3,9 @@ extends layout
 block breadcrumb
   ul.uk-breadcrumb
     li
-      a(href="/import") Import
+      a(href="/", uk-icon="icon: home", title="Home")
+    li
+      a(href="/dashboard") Dashboard
 
 block content
 
@@ -12,7 +14,7 @@ block content
       a.uk-alert-close(uk-close)
       p #{message}
 
-  form.uk-form-horizontal(method='POST', action='/import', enctype='multipart/form-data')
+  form.uk-form-horizontal(method='POST', action='/dashboard/import', enctype='multipart/form-data')
 
     .uk-margin
       div(uk-form-custom="target: true")
