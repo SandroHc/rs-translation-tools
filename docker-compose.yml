@@ -3,7 +3,7 @@ version: '3.7'
 services:
     web:
         depends_on:
-            - db
+            - elastic
         image: rs-translations
         build:
             context: .
@@ -13,20 +13,38 @@ services:
             - 6000:80
         networks:
             - rstranslations
-    db:
-        image: mongo:4
+    elastic:
+        image: docker.elastic.co/elasticsearch/elasticsearch:7.9.1
         restart: unless-stopped
+        environment:
+            - node.name=es01
+            - cluster.name=es-docker-cluster
+            - discovery.seed_hosts=
+            - cluster.initial_master_nodes=es01
+            - bootstrap.memory_lock=true
+            - "ES_JAVA_OPTS=-Xms200m -Xmx200m"
+        ulimits:
+            memlock:
+                soft: -1
+                hard: -1
         volumes:
-            - mongo:/data/db
+            - elastic:/usr/share/elasticsearch/data
         ports:
-            - 6001:27017
+            - 9200:9200
         networks:
             - rstranslations
+    kibana:
+        depends_on:
+            - elastic
+        image: docker.elastic.co/kibana/kibana:7.9.1
+        restart: "no"
         environment:
-            - MONGO_INITDB_DATABASE=rs
-            - MONGO_INITDB_ROOT_USERNAME=rstranslations
-            - MONGO_INITDB_ROOT_PASSWORD=rstranslations
+            ELASTICSEARCH_HOSTS: http://elastic:9200
+        ports:
+            - 5601:5601
+        networks:
+            - rstranslations
 networks:
     rstranslations:
 volumes:
-    mongo:
+    elastic:

@@ -5,30 +5,26 @@ const debug = require('debug')('app:route:import');
 const fs = require('fs');
 const formidable = require('formidable');
 
-const models = require('../db/models')();
-const Translation = models.Translation;
+const elastic = require('../db/elastic')
 
+
+function getAlertFromStatus(status, message) {
+  if(status === 'success')
+    return 'success';
+  else if(status === 'warning')
+    return 'warning';
+  else if(status === 'error')
+    return 'danger';
+  else if(status || message)
+    return 'primary';
+  else
+    return undefined;
+}
 
 router.get('/', function(req, res, next) {
   let status = req.query.status;
   let message = req.query.message;
-
-  let alert;
-  if(status === 'success')
-    alert = 'success';
-  else if(status === 'warning')
-    alert = 'warning';
-  else if(status === 'error')
-    alert = 'danger';
-  else if(status || message)
-    alert = 'primary';
-
-
-  const categories = Translation.aggregate([
-    { $group: { _id: "$category", count: { $sum:1 } } }
-  ]);
-  debug('CATEGORIES: %O', categories);
-
+  let alert = getAlertFromStatus(status, message);
   
   res.render('dashboard', { title: 'Dahsboard', alert, message });
 });
@@ -36,9 +32,6 @@ router.get('/', function(req, res, next) {
 router.post('/import', async function(req, res, next) {
   res.setTimeout(1000 * 60 * 10); // 10 minute timeout
 
-//  debug('Cleaning DB');
-//  await Translation.deleteMany({});
-  
   let promises = [];
 
   new formidable.IncomingForm().parse(req)
@@ -84,34 +77,15 @@ async function processFile(file) {
     .then(() => debug(`Finished '${file.name}'`));
 }
 
-function getKey(category, id) {
-  return `${category}:${id}`;
-}
-
 function createMongoItem(category, id, value) {
-  id = normalizeId(id);
-
   return {
-    key: getKey(category, id),
+    id: normalizeId(id),
     category: getCategory(category),
-    id,
     content: {
-      en: {
-        value: normalize(value.en),
-        language: 'english',
-      },
-      de: {
-        value: normalize(value.de),
-        language: 'german',
-      },
-      fr: {
-        value: normalize(value.fr),
-        language: 'french',
-      },
-      pt: {
-        value: normalize(value.pt),
-        language: 'portuguese',
-      },
+      en: normalize(value.en),
+      de: normalize(value.de),
+      fr: normalize(value.fr),
+      pt: normalize(value.pt),
     }
   }
 }
@@ -140,10 +114,33 @@ function normalize(text) {
 function ingestMongo(filename, translations) {
   debug(`Inserting ${translations.length} translations from ${filename}`);
 
-  return Translation.collection.insertMany(translations, { ordered: false })
-    .catch(e => {
-      console.warn(`Error insering into ${filename}. Probably a duplicate.`)
-    });
+  /*
+  if (!elastic.indices.exists({ index: 'translations' })) {
+    debug("CREATE INDEX")
+    elastic.indices.create({
+      index: 'translations',
+      body: {
+        mappings: {
+          properties: {
+            id: { type: 'integer' },
+            category: { type: 'text' },
+            content: {
+              en: { type: 'text' },
+              de: { type: 'text' },
+              fr: { type: 'text' },
+              pt: { type: 'text' },
+            }
+          }
+        }
+      }
+    }, { ignore: [400] })
+  }
+  */
+
+  const body = translations.flatMap(doc => [{ index: { _index: 'translations' } }, doc])
+
+  debug("BULK")
+  return elastic.bulk({ refresh: true, body });
 }
 
 function getCategory(name) {

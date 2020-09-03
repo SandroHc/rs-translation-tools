@@ -13,6 +13,12 @@ let config = {
         user: process.env.MONGO_USER,
         password: process.env.MONGO_PASS,
     },
+    elastic: {
+        host: process.env.ELASTIC_HOST,
+        port: process.env.ELASTIC_PORT,
+        user: process.env.ELASTIC_USER,
+        password: process.env.ELASTIC_PASS,
+    },
     analytics: {
         enabled: process.env.ANALYTICS === 'true',
         id: process.env.ANALYTICS_ID,

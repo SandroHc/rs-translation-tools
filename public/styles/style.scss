@@ -57,3 +57,11 @@ main {
 [data-clipboard-text] {
     cursor: pointer;
 }
+
+
+// Search highlight
+em {
+    color: inherit;
+    font-style: normal;
+    background: yellow;
+}
