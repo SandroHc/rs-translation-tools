@@ -3,6 +3,7 @@
   "description": "Translations for in-game data for the RuneScape game.",
   "version": "0.1.0",
   "private": true,
+  "license": "GPL-3.0-or-later",
   "scripts": {
     "start": "node ./bin/www"
   },
