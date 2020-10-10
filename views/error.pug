@@ -1,6 +1,23 @@
 extends layout
 
+block breadcrumb
+  ul.uk-breadcrumb
+    li
+      a(href="/", uk-icon="icon: home", title="Home")
+    li
+      span Error
+
 block content
-  h1= message
-  h2= error.status
-  pre #{error.stack}
+  p.uk-margin-remove-bottom
+    if message
+      strong= message
+    else
+      strong An unexpected error happened.
+
+  p.uk-margin-remove-top
+    | Please contact the author or&nbsp;
+    a(href="https://github.com/SandroHc/rs-translation-tools/issues", target="_blank") open an issue on GitHub
+    | .
+  
+  if error
+    pre #{error.stack}

@@ -66,6 +66,13 @@ router.get('/:text?', function(req, res, next) {
       
       res.render('search', { title: text, search: text, results: categories, total });
     })
+    .catch(err => {
+      debug(`Error searching for '${text}' on Elastic:`, err)
+  
+      res.locals.error = req.app.get('env') === 'development' ? err : {}; // only show stacktrace in dev
+      res.status(500);
+      res.render('error');
+    })
 });
 
 
