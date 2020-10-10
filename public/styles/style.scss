@@ -48,6 +48,7 @@ main {
 
 
 .category {
+    color: $global-primary-background;
     background-color: #FFF;
     padding: 0.5em 0;
     margin: 0;
@@ -64,4 +65,10 @@ em {
     color: inherit;
     font-style: normal;
     background: yellow;
+}
+
+
+.logo {
+    fill: rgba($global-primary-background, .2);
+    max-width: 20vh;
 }

@@ -11,24 +11,26 @@ block breadcrumb
       div &nbsp(#{total} results)
 
 block content
-  each list, category in results
-    h2.category(uk-sticky='offset: 80')= category
+  ul(uk-accordion="multiple: true")
+    each list, category in results
+      li.uk-open.uk-card.uk-card-default.uk-padding-small
+        a.category.uk-accordion-title.uk-padding-remove-top(href='#', uk-sticky='offset: 80')= category
 
-    .uk-overflow-auto
-      table.uk-table.uk-table-small.uk-table-divider.uk-table-hover
-        thead
-          tr
-            th(title='English') EN
-            th(title='German') DE
-            th(title='French') FR
-            th(title='Portuguese') PT
-        tbody
-          each val in list
-            tr
-              td.uk-text-truncate(title=val.en, data-clipboard-text=val.en) !{val.en}
-              td.uk-text-truncate(title=val.de, data-clipboard-text=val.de) !{val.de}
-              td.uk-text-truncate(title=val.fr, data-clipboard-text=val.fr) !{val.fr}
-              td.uk-text-truncate(title=val.pt, data-clipboard-text=val.pt) !{val.pt}
+        .uk-accordion-content.uk-margin-remove-top.uk-overflow-auto
+          table.uk-table.uk-table-small.uk-table-divider.uk-table-hover
+            thead
+              tr
+                th(title='English') EN
+                th(title='German') DE
+                th(title='French') FR
+                th(title='Portuguese') PT
+            tbody
+              each val in list
+                tr
+                  td.uk-text-truncate(title=val.en.text, data-clipboard-text=val.en.text) !{val.en.highlight}
+                  td.uk-text-truncate(title=val.de.text, data-clipboard-text=val.de.text) !{val.de.highlight}
+                  td.uk-text-truncate(title=val.fr.text, data-clipboard-text=val.fr.text) !{val.fr.highlight}
+                  td.uk-text-truncate(title=val.pt.text, data-clipboard-text=val.pt.text) !{val.pt.highlight}
 
 
     script(src="https://cdn.jsdelivr.net/npm/clipboard@2.0.6/dist/clipboard.min.js")

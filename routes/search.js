@@ -57,17 +57,30 @@ router.get('/:text?', function(req, res, next) {
 
         categories[o._source.category].push({
           score: o._score,
-          en: getTextOrHighlight(o, 'content.en', o._source.content.en),
-          de: getTextOrHighlight(o, 'content.de', o._source.content.de),
-          fr: getTextOrHighlight(o, 'content.fr', o._source.content.fr),
-          pt: getTextOrHighlight(o, 'content.pt', o._source.content.pt),
+          en: {
+            text: o._source.content.en,
+            highlight: getTextOrHighlight(o, 'content.en', o._source.content.en),
+          },
+          de: {
+            text: o._source.content.de,
+            highlight: getTextOrHighlight(o, 'content.de', o._source.content.de),
+          },
+          fr: {
+            text: o._source.content.fr,
+            highlight: getTextOrHighlight(o, 'content.fr', o._source.content.fr),
+          },
+          pt: {
+            text: o._source.content.pt,
+            highlight: getTextOrHighlight(o, 'content.pt', o._source.content.pt),
+          },
         });
       });
       
       res.render('search', { title: text, search: text, results: categories, total });
     })
     .catch(err => {
-      debug(`Error searching for '${text}' on Elastic:`, err)
+      debug(`Error searching for '${text}' on Elastic: ${err.name}: ${err.message}`)
+      debug(err.stack)
   
       res.locals.error = req.app.get('env') === 'development' ? err : {}; // only show stacktrace in dev
       res.status(500);
