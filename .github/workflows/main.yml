@@ -1,0 +1,26 @@
+# This workflow will build a Java project with Gradle
+# For more information see: https://help.github.com/actions/language-and-framework-guides/building-and-testing-java-with-gradle
+
+name: Build
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Prepare .env.docker
+        run: echo "${{ secrets.DOCKER_ENV }}" > .env.docker
+      - name: Push to GitHub Packages
+        uses: docker/build-push-action@v1
+        with:
+          username: ${{ secrets.DOCKER_CR_USER }}
+          password: ${{ secrets.DOCKER_CR_TOKEN }}
+          registry: ghcr.io
+          repository: sandrohc/rs-translation-tools
+          tag_with_ref: true
