@@ -25,8 +25,37 @@ router.get('/', function(req, res, next) {
   let status = req.query.status;
   let message = req.query.message;
   let alert = getAlertFromStatus(status, message);
+
+  // elastic.search({
+  //   index: 'translations',
+  //   size: 0,
+  //   body: {
+  //     aggs: {
+  //       categories: {
+  //         terms: {
+  //           field: 'category',
+  //         },
+  //       },
+  //     },
+  //   }
+  // })
+  //     .then(result => {
+  //       let hits = result.body.hits
+  //       const total = hits.total.value;
+  //       debug(`Found ${total} results for`);
+  //
+  //       // res.render('search', { title: text, search: text, results: categories, total });
+  //     })
+  //     .catch(err => {
+  //       debug(`Error searching on Elastic: ${err.name}: ${err.message}`)
+  //       debug(err.stack)
+  //
+  //       // res.locals.error = req.app.get('env') === 'development' ? err : {}; // only show stacktrace in dev
+  //       // res.status(500);
+  //       // res.render('error');
+  //     })
   
-  res.render('dashboard', { title: 'Dahsboard', alert, message });
+  res.render('dashboard', { title: 'Dashboard', alert, message });
 });
 
 router.post('/import', async function(req, res, next) {
@@ -64,7 +93,7 @@ router.post('/import', async function(req, res, next) {
 
 async function processFile(file) {
   let filename = file.name.replace(/\.[^/.]+$/, ''); // remove the extension (e.g. 'items.json' -> 'items')
-  let category = filename;
+  let category = filename.replace('.clean', '');
 
   let rawdata = fs.readFileSync(file.path);
   let data = JSON.parse(rawdata);
@@ -114,32 +143,33 @@ function normalize(text) {
 function ingestMongo(filename, translations) {
   debug(`Inserting ${translations.length} translations from ${filename}`);
 
-  /*
-  if (!elastic.indices.exists({ index: 'translations' })) {
-    debug("CREATE INDEX")
-    elastic.indices.create({
-      index: 'translations',
-      body: {
-        mappings: {
-          properties: {
-            id: { type: 'integer' },
-            category: { type: 'text' },
-            content: {
-              en: { type: 'text' },
-              de: { type: 'text' },
-              fr: { type: 'text' },
-              pt: { type: 'text' },
-            }
+  debug('Creating \'translations\' index')
+  elastic.indices.create({
+    index: 'translations',
+    body: {
+      mappings: {
+        properties: {
+          id: { type: 'integer' },
+          category: { type: 'keyword' },
+          content: {
+            en: { type: 'text' },
+            de: { type: 'text' },
+            fr: { type: 'text' },
+            pt: { type: 'text' },
           }
         }
       }
-    }, { ignore: [400] })
-  }
-  */
+    }
+  }, { ignore: [400] })
 
-  const body = translations.flatMap(doc => [{ index: { _index: 'translations' } }, doc])
+  const body = translations.flatMap(doc => [{
+    index: {
+      _index: 'translations',
+      _id: doc.id,
+    }
+  }, doc])
 
-  debug("BULK")
+  debug('Inserting in bulk')
   return elastic.bulk({ refresh: true, body });
 }
 
@@ -167,7 +197,6 @@ function getCategory(name) {
     default:
       console.warn('UNKNOWN CATEGORY: ', name);
       return name;
-      break;
   }
 }
 

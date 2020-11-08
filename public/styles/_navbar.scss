@@ -1,0 +1,41 @@
+.uk-search-navbar {
+    background-color: $global-background;
+    border-radius: 0.3em;
+    padding: 0.5em 0.5em 0.5em 2em;
+
+    .uk-search-icon {
+        width: 75px;
+    }
+
+    .uk-search-input {
+        font-size: 1.2rem;
+    }
+}
+
+
+.uk-logo,
+.uk-logo:hover {
+    color: #FFF;
+}
+
+
+/* Search form */
+.search-filter-icon {
+    width: 75px;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+
+    // align to the right
+    right: 0;
+    left: auto;
+
+    &.search-filter-icon { // needed to increase specifity
+        min-height: unset;
+        color: $global-primary-background;
+    }
+}
