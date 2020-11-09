@@ -95,8 +95,8 @@ async function processFile(file) {
   let filename = file.name.replace(/\.[^/.]+$/, ''); // remove the extension (e.g. 'items.json' -> 'items')
   let category = filename.replace('.clean', '');
 
-  let rawdata = fs.readFileSync(file.path);
-  let data = JSON.parse(rawdata);
+  let rawData = fs.readFileSync(file.path);
+  let data = JSON.parse(rawData);
 
   let translations = [];
   for (let [id, value] of Object.entries(data))
