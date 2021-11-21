@@ -9,7 +9,7 @@
     "debug": "nodemon --inspect ./bin/www"
   },
   "dependencies": {
-    "@elastic/elasticsearch": "^7.9.0",
+    "@keyv/sqlite": "^2.0.3",
     "cookie-parser": "~1.4.4",
     "debug": "~4.2.0",
     "dotenv": "^8.2.0",
@@ -17,9 +17,11 @@
     "express-basic-auth": "^1.2.0",
     "formidable": "^1.2.2",
     "http-errors": "~1.8.0",
+    "keyv": "^4.0.4",
     "morgan": "~1.10.0",
     "node-sass-middleware": "0.11.0",
     "pug": "3.0.0",
+    "sonic-channel": "^1.2.6",
     "uikit": "^3.5.4"
   },
   "devDependencies": {}

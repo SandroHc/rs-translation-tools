@@ -57,10 +57,8 @@ typings/
 # dotenv environment variables file
 .env
 .env.docker
-
-# next.js build output
-.next
-
+.docker/sonic.cfg
 
 # Project-specific
-/*.bat
+*.bat
+*.sqlite

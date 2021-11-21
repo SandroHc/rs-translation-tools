@@ -7,11 +7,13 @@ let config = {
 		user: process.env.AUTH_USER,
 		password: process.env.AUTH_PASS,
 	},
-	elastic: {
-		host: process.env.ELASTIC_HOST,
-		port: process.env.ELASTIC_PORT,
-		user: process.env.ELASTIC_USER,
-		password: process.env.ELASTIC_PASS,
+	sonic: {
+		host: process.env.SONIC_HOST,
+		port: Number(process.env.SONIC_PORT),
+		password: process.env.SONIC_PASS,
+	},
+	keyv: {
+		database: process.env.KEYV_DATABASE,
 	},
 	analytics: {
 		enabled: process.env.ANALYTICS === 'true',

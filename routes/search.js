@@ -1,91 +1,138 @@
 const express = require('express');
 const router = express.Router();
 const debug = require('debug')('app:route:search');
+const { sonicChannelSearch } = require('../utils/sonic');
+const { keyv } = require("../utils/keyv");
 
-const elastic = require('../db/elastic')
 
+function getCategory(name) {
+	switch (name) {
+		case 'cape_requirements':            return 'Cape Requirements';
+		case 'clan_titles':                  return 'Titles';
+		case 'invention':                    return 'Invention';
+		case 'items':                        return 'Items';
+		case 'map_labels':                   return 'Map';
+		case 'musics':                       return 'Musics';
+		case 'npcs':                         return 'NPCs';
+		case 'objects':                      return 'Objects';
+		case 'quest_names':                  return 'Quests';
+		case 'quests':                       return 'Quests';
+		case 'slayer_categories':            return 'Slayer';
+		case 'spells':                       return 'Spells';
+		case 'summoning_familiars':          return 'Summoning';
+		case 'summoning_items':              return 'Summoning';
+		case 'ui_action_bar':                return 'Action Bar';
+		case 'ui_bosses':                    return 'Bosses';
+		case 'world_map_places':             return 'Map';
+		case 'world_map_player_owned_ports': return 'Map - Player Owned Ports';
+		case 'world_map_zones':              return 'Map';
+		default:
+			console.warn('UNKNOWN CATEGORY: ', name);
+			return name;
+	}
+}
 
-router.get('/:text?', function(req, res, next) {
+function getHighlight(text, searchTerm) {
+	let textClean = text ? text.toLowerCase() : '';
+	let searchClean = searchTerm ? searchTerm.toLowerCase() : '';
+
+	let i = textClean.indexOf(searchClean);
+	if (i !== -1) {
+		let pre   = text.substring(0, i)
+		let match = text.substring(i, i + searchClean.length);
+		let pos   = text.substring(i + searchClean.length);
+
+		return pre + '<em>' + match + '</em>' + pos
+	} else {
+		return text
+	}
+}
+
+function discardLang(str) {
+	const i = str.lastIndexOf(':');
+	if (i !== -1) {
+		return str.substring(0, i);
+	} else {
+		return str;
+	}
+}
+
+router.get('/:text?', function(req, res) {
 	// Find the parameter in the URI (/search/{name}) or in the query parameters (/search?text={name})
-	let text = req.params.text || req.query.text;
+	let searchTerm = req.params.text || req.query.text;
 
-	if (!text) {
+	if (!searchTerm) {
 		res.redirect('/');
 		return;
 	}
 
-	debug('Searching for:', text)
+	debug('Searching for:', searchTerm)
 
-	elastic.search({
-		index: 'translations',
-		body: {
-			query: {
-				multi_match: {
-					query: text,
-					fields: [
-						'content.en^1.5',
-						'content.de',
-						'content.fr',
-						'content.pt'
-					],
-					fuzziness: 'AUTO',
-					prefix_length: 2
-				},
-			},
-			highlight: {
-				fields: {
-					'content.en': { type: 'unified' },
-					'content.de': { type: 'unified' },
-					'content.fr': { type: 'unified' },
-					'content.pt': { type: 'unified' },
-				}
-			}
-		}
-	})
-		.then(result => {
-			let hits = result.body.hits
-			const total = hits.total.value;
-			debug(`Found ${total} results for: ${text}`);
+	// sonicChannelSearch.query('translations', 'default', searchTerm, { limit: 10, lang: 'eng' })
+	sonicChannelSearch.query('translations', 'default', searchTerm)
+		.then(results => {
+			// Convert results to their respective keys
+			const keys = new Set();
+			results.map(discardLang).forEach(r => keys.add(r));
+			return keys.values();
+		})
+		.then(keys => {
+			// Convert keys to the values
+			let results = [];
+
+			for (let key of keys)
+				results.push(keyv.get(key));
+
+			return Promise.all(results)
+		})
+		.then(results => {
+			debug(`Found ${results.length} results for: ${searchTerm}`);
 
 			// Group results into categories
 			let categories = {};
 
-			hits.hits.forEach(o => {
-				if (!categories[o._source.category]) categories[o._source.category] = [];
+			for (let result of results) {
+				if (!result) {
+					debug(`Sonic returned a key that does not exist on SQLite. Consider reindexing the databases.`)
+					continue;
+				}
 
-				let getTextOrHighlight = (o, key, text) => o.highlight && o.highlight[key] ? o.highlight[key][0] : text
+				const resp = {}
 
-				categories[o._source.category].push({
-					score: o._score,
-					en: {
-						text: o._source.content.en,
-						highlight: getTextOrHighlight(o, 'content.en', o._source.content.en),
-					},
-					de: {
-						text: o._source.content.de,
-						highlight: getTextOrHighlight(o, 'content.de', o._source.content.de),
-					},
-					fr: {
-						text: o._source.content.fr,
-						highlight: getTextOrHighlight(o, 'content.fr', o._source.content.fr),
-					},
-					pt: {
-						text: o._source.content.pt,
-						highlight: getTextOrHighlight(o, 'content.pt', o._source.content.pt),
-					},
-				});
+				for (const content of result.content) {
+					resp[content.lang] = {
+						text: content.text,
+						highlight: getHighlight(content.text, searchTerm),
+					}
+				}
+
+				// Fill default languages
+				if (!resp.eng) resp.eng = { text: '', highlight: '' }
+				if (!resp.deu) resp.deu = { text: '', highlight: '' }
+				if (!resp.fra) resp.fra = { text: '', highlight: '' }
+				if (!resp.por) resp.por = { text: '', highlight: '' }
+
+				// Add result to list
+				let category = getCategory(result.category)
+				if (!categories[category]) categories[category] = [];
+				categories[category].push(resp);
+			}
+
+			res.render('search', {
+				title: searchTerm,
+				search: searchTerm,
+				results: categories,
+				total: results.length
 			});
-
-			res.render('search', { title: text, search: text, results: categories, total });
 		})
 		.catch(err => {
-			debug(`Error searching for '${text}' on Elastic: ${err.name}: ${err.message}`)
+			debug(`Error searching for '${searchTerm}': ${err.name}: ${err.message}`)
 			debug(err.stack)
 
 			res.locals.error = req.app.get('env') === 'development' ? err : {}; // only show stacktrace in dev
 			res.status(500);
 			res.render('error');
-		})
+		});
 });
 
 

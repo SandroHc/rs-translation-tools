@@ -1,65 +1,38 @@
 const express = require('express');
 const router = express.Router();
 const debug = require('debug')('app:route:import');
+const { sonicChannelIngest } = require('../utils/sonic');
 
 const fs = require('fs');
 const formidable = require('formidable');
-
-const elastic = require('../db/elastic')
+const { keyv } = require("../utils/keyv");
 
 
 function getAlertFromStatus(status, message) {
-	if(status === 'success')
+	if (status === 'success')
 		return 'success';
-	else if(status === 'warning')
+	else if (status === 'warning')
 		return 'warning';
-	else if(status === 'error')
+	else if (status === 'error')
 		return 'danger';
-	else if(status || message)
+	else if (status || message)
 		return 'primary';
 	else
 		return undefined;
 }
 
-router.get('/', function(req, res, next) {
+router.get('/', function(req, res) {
 	let status = req.query.status;
 	let message = req.query.message;
 	let alert = getAlertFromStatus(status, message);
 
-	// elastic.search({
-	// 	index: 'translations',
-	// 	size: 0,
-	// 	body: {
-	// 		aggs: {
-	// 			categories: {
-	// 				terms: {
-	// 					field: 'category',
-	// 				},
-	// 			},
-	// 		},
-	// 	}
-	// })
-	// 		.then(result => {
-	// 			let hits = result.body.hits
-	// 			const total = hits.total.value;
-	// 			debug(`Found ${total} results for`);
-	//
-	// 			// res.render('search', { title: text, search: text, results: categories, total });
-	// 		})
-	// 		.catch(err => {
-	// 			debug(`Error searching on Elastic: ${err.name}: ${err.message}`)
-	// 			debug(err.stack)
-	//
-	// 			// res.locals.error = req.app.get('env') === 'development' ? err : {}; // only show stacktrace in dev
-	// 			// res.status(500);
-	// 			// res.render('error');
-	// 		})
-
 	res.render('dashboard', { title: 'Dashboard', alert, message });
 });
 
-router.post('/import', async function(req, res, next) {
+router.post('/import', async function(req, res) {
 	res.setTimeout(1000 * 60 * 10); // 10 minute timeout
+
+	await keyv.clear()
 
 	let promises = [];
 
@@ -100,22 +73,34 @@ async function processFile(file) {
 
 	let translations = [];
 	for (let [id, value] of Object.entries(data))
-		translations.push(createMongoItem(category, id, value));
+		translations.push(createIngestItem(category, id, value));
 
-	return ingestMongo(file.name, translations)
-		.then(() => debug(`Finished '${file.name}'`));
+	return ingest(file.name, translations).then(() => debug(`Finished '${file.name}'`));
 }
 
-function createMongoItem(category, id, value) {
+function createIngestItem(category, id, value) {
+	let idNormalized = normalizeId(id);
 	return {
-		id: normalizeId(id),
-		category: getCategory(category),
-		content: {
-			en: normalize(value.en),
-			de: normalize(value.de),
-			fr: normalize(value.fr),
-			pt: normalize(value.pt),
-		}
+		id: idNormalized,
+		category: category,
+		content: [
+			{
+				lang: 'eng',
+				text: normalize(value.en)
+			},
+			{
+				lang: 'deu',
+				text: normalize(value.de)
+			},
+			{
+				lang: 'fra',
+				text: normalize(value.fr)
+			},
+			{
+				lang: 'por',
+				text: normalize(value.pt)
+			},
+		]
 	}
 }
 
@@ -140,64 +125,38 @@ function normalize(text) {
 	return text;
 }
 
-function ingestMongo(filename, translations) {
+function ingest(filename, translations) {
 	debug(`Inserting ${translations.length} translations from ${filename}`);
 
-	debug('Creating \'translations\' index')
-	elastic.indices.create({
-		index: 'translations',
-		body: {
-			mappings: {
-				properties: {
-					id: { type: 'integer' },
-					category: { type: 'keyword' },
-					content: {
-						en: { type: 'text' },
-						de: { type: 'text' },
-						fr: { type: 'text' },
-						pt: { type: 'text' },
-					}
-				}
-			}
+	let promises = []
+
+	// Process into Keyv
+	for (let translation of translations) {
+		const id = translation.category + ':' + translation.id
+		const value = {
+			id: translation.id,
+			category: translation.category,
+			content: translation.content.map(content => { return { text: content.text, lang: content.lang }})
 		}
-	}, { ignore: [400] })
 
-	const body = translations.flatMap(doc => [{
-		index: {
-			_index: 'translations',
-			_id: doc.id,
-		}
-	}, doc])
-
-	debug('Inserting in bulk')
-	return elastic.bulk({ refresh: true, body });
-}
-
-function getCategory(name) {
-	switch (name) {
-		case 'cape_requirements':            return 'Cape Requirements';
-		case 'clan_titles':                  return 'Titles';
-		case 'invention':                    return 'Invention';
-		case 'items':                        return 'Items';
-		case 'map_labels':                   return 'Map';
-		case 'musics':                       return 'Musics';
-		case 'npcs':                         return 'NPCs';
-		case 'objects':                      return 'Objects';
-		case 'quest_names':                  return 'Quests';
-		case 'quests':                       return 'Quests';
-		case 'slayer_categories':            return 'Slayer';
-		case 'spells':                       return 'Spells';
-		case 'summoning_familiars':          return 'Summoning';
-		case 'summoning_items':              return 'Summoning';
-		case 'ui_action_bar':                return 'Action Bar';
-		case 'ui_bosses':                    return 'Bosses';
-		case 'world_map_places':             return 'Map';
-		case 'world_map_player_owned_ports': return 'Map - Player Owned Ports';
-		case 'world_map_zones':              return 'Map';
-		default:
-			console.warn('UNKNOWN CATEGORY: ', name);
-			return name;
+		promises.push(keyv.set(id, value));
 	}
+
+	// Process into Sonic
+	for (let translation of translations) {
+		for (content of translation.content) {
+			if (!content.text)
+				continue;
+
+			const id = translation.category + ':' + translation.id + ':' + content.lang;
+			// const options = { lang: content.lang };
+			const options = {};
+			promises.push(sonicChannelIngest.push('translations', 'default', id, content.text, options));
+		}
+	}
+
+	return Promise.all(promises)
+		.then(() => sonicChannelIngest.flushc('translations'))
 }
 
 module.exports = router;
