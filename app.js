@@ -19,46 +19,46 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(sassMiddleware({
-  src: path.join(__dirname, 'public'),
-  dest: path.join(__dirname, 'public'),
-  includePaths: [path.join(__dirname), 'node_modules'],
-  indentedSyntax: false, // true = .sass and false = .scss
-  sourceMap: true
+	src: path.join(__dirname, 'public'),
+	dest: path.join(__dirname, 'public'),
+	includePaths: [path.join(__dirname), 'node_modules'],
+	indentedSyntax: false, // true = .sass and false = .scss
+	sourceMap: true
 }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 const middleware = {
 
-  globalLocals: function (req, res, next) {
-    res.locals.config = config;
-    res.locals.route = req.path;
-    next();
-  },
+	globalLocals: function (req, res, next) {
+		res.locals.config = config;
+		res.locals.route = req.path;
+		next();
+	},
 
-  notFound: function (req, res, next) {
-    // catch 404 and forward to error handler
-    next(createError(404));
-  },
+	notFound: function (req, res, next) {
+		// catch 404 and forward to error handler
+		next(createError(404));
+	},
 
-  errorHandler: function (err, req, res, next) {
-    if (res.headersSent)
-      return next(err);
+	errorHandler: function (err, req, res, next) {
+		if (res.headersSent)
+			return next(err);
 
-    // set locals, only providing error in development
-    res.locals.message = err.message;
-    res.locals.error = req.app.get('env') === 'development' ? err : {};
+		// set locals, only providing error in development
+		res.locals.message = err.message;
+		res.locals.error = req.app.get('env') === 'development' ? err : {};
 
-    // render the error page
-    res.status(err.status || 500);
-    res.render('error');
-  },
+		// render the error page
+		res.status(err.status || 500);
+		res.render('error');
+	},
 
 };
 
 function getAuthUser() {
-  let user = {};
-  user[config.auth.user] = config.auth.password;
-  return user;
+	let user = {};
+	user[config.auth.user] = config.auth.password;
+	return user;
 }
 
 

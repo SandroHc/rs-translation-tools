@@ -4,7 +4,7 @@ const debug = require('debug')('app:route:about');
 
 
 router.get('/', function(req, res, next) {
-  res.render('about');
+	res.render('about');
 });
 
 module.exports = router;
