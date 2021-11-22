@@ -122,6 +122,8 @@ async function ingest(translations) {
 	let i = 1;
 	let file = null;
 
+	await sonicChannelIngest.flushc('translations');
+
 	for (let translation of translations) {
 		for (content of translation.content) {
 			if (!content.text) continue;
@@ -146,8 +148,6 @@ async function ingest(translations) {
 			file = translation.source;
 		}
 	}
-
-	await sonicChannelIngest.flushc('translations');
 
 	timeTaken = (Date.now() - start) / 1000;
 	debug('Finished ingestion into Sonic. Took ' + timeTaken + ' seconds');
