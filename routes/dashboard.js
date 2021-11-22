@@ -1,11 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const debug = require('debug')('app:route:import');
-const { sonicChannelIngest } = require('../utils/sonic');
-
 const fs = require('fs');
 const formidable = require('formidable');
+const debug = require('debug')('app:route:import');
 const { keyv } = require("../utils/keyv");
+const { sonicChannelIngest } = require('../utils/sonic');
 
 
 function getAlertFromStatus(status, message) {
@@ -32,57 +31,45 @@ router.get('/', function(req, res) {
 router.post('/import', async function(req, res) {
 	res.setTimeout(1000 * 60 * 10); // 10 minute timeout
 
-	await keyv.clear()
+	let pendingData = [];
 
-	let promises = [];
-
-	new formidable.IncomingForm().parse(req)
+	await new formidable.IncomingForm().parse(req)
 		.on('file', (_, file) => {
-			promises.push(processFile(file)
-				.catch(err => {
-					throw `Error processing '${file.name}': ${err}`;
-				})
-			);
+			processFile(file, pendingData)
 		})
 		.on('error', err => {
 			console.error('Error receiving files:', err);
 			throw err;
 		})
-		.on('end', () => {
-			Promise.all(promises)
-				.catch(err => {
-					console.error(err);
-					res.redirect('/dashboard?status=error&message=' + err);
-				})
-				.then(() => {
-					if (res.headersSent)
-						return;
+		.on('end', async () => {
+			try {
+				await ingest(pendingData);
 
-					debug('Finished all files');
+				if (!res.headersSent)
 					res.redirect('/dashboard?status=success&message=Success importing files!');
-				})
-		})
+			} catch (e) {
+				if (!res.headersSent)
+					res.redirect('/dashboard?status=error&message=' + e);
+			}
+		});
 })
 
-async function processFile(file) {
+function processFile(file, list) {
 	let filename = file.name.replace(/\.[^/.]+$/, ''); // remove the extension (e.g. 'items.json' -> 'items')
 	let category = filename.replace('.clean', '');
 
 	let rawData = fs.readFileSync(file.path);
 	let data = JSON.parse(rawData);
 
-	let translations = [];
 	for (let [id, value] of Object.entries(data))
-		translations.push(createIngestItem(category, id, value));
-
-	return ingest(file.name, translations).then(() => debug(`Finished '${file.name}'`));
+		list.push(createIngestItem(category, id, value, file.name));
 }
 
-function createIngestItem(category, id, value) {
-	let idNormalized = normalizeId(id);
+function createIngestItem(category, id, value, source) {
 	return {
-		id: idNormalized,
+		id: normalizeId(id),
 		category: category,
+		source: source,
 		content: [
 			{
 				lang: 'eng',
@@ -125,12 +112,52 @@ function normalize(text) {
 	return text;
 }
 
-function ingest(filename, translations) {
-	debug(`Inserting ${translations.length} translations from ${filename}`);
+async function ingest(translations) {
+	let timeTaken;
+	let start = Date.now();
 
-	let promises = []
+	// Process into Sonic
+	debug(`Starting ingesting ${translations.length * 4} translations into Sonic`);
 
-	// Process into Keyv
+	let i = 1;
+	let file = null;
+
+	for (let translation of translations) {
+		for (content of translation.content) {
+			if (!content.text) continue;
+
+			const id = translation.category + ':' + translation.id + ':' + content.lang;
+
+			try {
+				await sonicChannelIngest.push('translations', 'default', id, content.text, { lang: content.lang });
+			} catch (e) {
+				throw 'Error ingesting ' + id + ' into Sonic: ' + e
+			}
+		}
+
+		if (translation.source !== file) {
+			debug(`Ingesting ${translation.category}...`)
+			file = translation.source;
+			i = 1;
+		}
+
+		if (++i % 1000 === 0) {
+			debug(`Ingesting ${translation.category}... #${translation.id}`)
+			file = translation.source;
+		}
+	}
+
+	await sonicChannelIngest.flushc('translations');
+
+	timeTaken = (Date.now() - start) / 1000;
+	debug('Finished ingestion into Sonic. Took ' + timeTaken + ' seconds');
+
+
+	// Process into SQLite
+	debug(`Starting ingesting ${translations.length} translations into SQLite`);
+	let keyvPromises = [];
+	start = Date.now();
+
 	for (let translation of translations) {
 		const id = translation.category + ':' + translation.id
 		const value = {
@@ -139,24 +166,22 @@ function ingest(filename, translations) {
 			content: translation.content.map(content => { return { text: content.text, lang: content.lang }})
 		}
 
-		promises.push(keyv.set(id, value));
+		keyvPromises.push(keyv.set(id, value));
 	}
 
-	// Process into Sonic
-	for (let translation of translations) {
-		for (content of translation.content) {
-			if (!content.text)
-				continue;
-
-			const id = translation.category + ':' + translation.id + ':' + content.lang;
-			// const options = { lang: content.lang };
-			const options = {};
-			promises.push(sonicChannelIngest.push('translations', 'default', id, content.text, options));
-		}
+	try {
+		await keyv.clear();
+		await Promise.all(keyvPromises);
+	} catch (e) {
+		throw 'Error ingesting into SQLite: ' + e
 	}
 
-	return Promise.all(promises)
-		.then(() => sonicChannelIngest.flushc('translations'))
+	timeTaken = (Date.now() - start) / 1000;
+	debug('Finished ingestion into SQLite. Took ' + timeTaken + ' seconds');
+}
+
+function ingestIntoSonic(data) {
+	return sonicChannelIngest.push('translations', 'default', data.id, data.text, { lang: data.lang });
 }
 
 module.exports = router;

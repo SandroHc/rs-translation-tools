@@ -68,7 +68,6 @@ router.get('/:text?', function(req, res) {
 
 	debug('Searching for:', searchTerm)
 
-	// sonicChannelSearch.query('translations', 'default', searchTerm, { limit: 10, lang: 'eng' })
 	sonicChannelSearch.query('translations', 'default', searchTerm)
 		.then(results => {
 			// Convert results to their respective keys
