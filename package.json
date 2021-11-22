@@ -9,20 +9,20 @@
     "debug": "nodemon --inspect ./bin/www"
   },
   "dependencies": {
-    "@keyv/sqlite": "^2.0.3",
-    "cookie-parser": "~1.4.4",
-    "debug": "~4.2.0",
-    "dotenv": "^8.2.0",
-    "express": "~4.17.1",
-    "express-basic-auth": "^1.2.0",
-    "formidable": "^1.2.2",
-    "http-errors": "~1.8.0",
-    "keyv": "^4.0.4",
-    "morgan": "~1.10.0",
-    "node-sass-middleware": "0.11.0",
-    "pug": "3.0.0",
-    "sonic-channel": "^1.2.6",
-    "uikit": "^3.5.4"
+    "@keyv/sqlite": "2.x",
+    "cookie-parser": "1.x",
+    "debug": "4.x",
+    "dotenv": "8.x",
+    "express": "4.x",
+    "express-basic-auth": "1.x",
+    "formidable": "1.x",
+    "http-errors": "1.x",
+    "keyv": "4.x",
+    "morgan": "1.x",
+    "node-sass-middleware": "0.11.x",
+    "pug": "3.x",
+    "sonic-channel": "1.x",
+    "uikit": "3.x"
   },
   "devDependencies": {}
 }
